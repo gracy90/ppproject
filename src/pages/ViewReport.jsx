@@ -13,10 +13,14 @@ import CustomTable from "../components/CustomTable";
 import { print } from "../services/printService";
 import PDF from "../components/Pdf";
 import { useLocation } from "react-router-dom";
+import moment from "moment";
 
 const ReportViewComponent = React.forwardRef((props, ref) => {
   const location = useLocation();
   const toaster = useToaster();
+  const [data, setData] = React.useState([]);
+  const [dataToRender, setDataToRender] = React.useState([]);
+  const [dataToRenderNew, setDataToRenderNew] = React.useState([]);
 
   const message = (
     <Message showIcon type={"success"} closable>
@@ -24,9 +28,32 @@ const ReportViewComponent = React.forwardRef((props, ref) => {
     </Message>
   );
 
+  React.useEffect(() => {
+    setData(location.state?.data);
+  }, [location.state?.data]);
+
+  React.useEffect(() => {
+    setDataToRender(
+      (dataToRenderNew || data)?.map((d, i) => ({
+        ...d,
+        timestamp: moment(d.timestamp).format("MMM Do YY"),
+        id: i + 1,
+        remark: d.Decibels >= 80 ? "Faild" : d.Decibels <= 50 ? "Nice" : "Good",
+      }))
+    );
+  }, [data, dataToRenderNew]);
+
   const onPrint = () => {
-    print(<PDF data={location.state?.data} />, () =>
+    print(<PDF data={dataToRender} />, () =>
       toaster.push(message, { placement: "topEnd", duration: 5000 })
+    );
+  };
+
+  const handleDataChange = (value) => {
+    const from = new Date(value[0]).valueOf();
+    const to = new Date(value[1]).valueOf();
+    setDataToRenderNew(
+      data.filter((d) => d.timestamp >= from && d.timestamp <= to)
     );
   };
 
@@ -42,6 +69,7 @@ const ReportViewComponent = React.forwardRef((props, ref) => {
             <DateRangePicker
               format="yyyy-MM-dd HH:mm:ss"
               defaultCalendarValue={[new Date(), new Date()]}
+              onChange={handleDataChange}
             />
             <Button
               color="blue"
@@ -56,7 +84,7 @@ const ReportViewComponent = React.forwardRef((props, ref) => {
       }
     >
       <FlexboxGrid justify="center">
-        <CustomTable data={location.state?.data} />
+        <CustomTable data={dataToRender} />
       </FlexboxGrid>
     </Panel>
   );

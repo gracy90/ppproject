@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 /* eslint-disable react/no-unknown-property */
 /* eslint-disable no-undef */
 /* eslint-disable react/no-children-prop */
@@ -11,11 +12,14 @@ import {
   Stack,
   Loader,
   Button,
+  Notification,
+  ButtonToolbar,
 } from "rsuite";
 import { Icon } from "@rsuite/icons";
 import { BiMicrophone, BiSolidWebcam, BiSolidInfoCircle } from "react-icons/bi";
 import { Message, useToaster } from "rsuite";
 import { ref, onValue } from "firebase/database";
+import { CountdownCircleTimer } from "react-countdown-circle-timer";
 
 import Animate from "../components/Animate";
 import { styled } from "styled-components";
@@ -23,15 +27,64 @@ import CustomModal from "../components/CustomModal";
 import CustomChart from "../components/CustomChart";
 import ObjectDetect from "../components/ObjectDetect";
 // import bg from "../assets/s_l_bg.png";
-import ppp from "../assets/ppp.jpg";
+// import ppp from "../assets/ppp.jpg";
 import { useNavigate } from "react-router-dom";
 import { sendEmail } from "../services/mailService";
 import CustomProgress from "../components/CustomProgress";
 import CustomProgressBig from "../components/CustomProgressBig";
-import { database } from "../services/fireBase";
-import moment from "moment";
+import { auth, database } from "../services/fireBase";
 
-const I = ppp;
+// const I = ppp;
+
+const MessagePop = React.forwardRef(
+  ({ types, setShowNoti, setSendMail, ...rest }, ref) => {
+    return (
+      <Notification ref={ref} {...rest} type={types} header={types}>
+        <NotiContent>
+          Lorem ipsum dolor sit amet consectetur adipisicing elit. Magni illo
+          cupiditate repellat praesentium placeat ipsum dolorem ea doloribus?
+          <CountdownCircleTimer
+            isPlaying
+            size={100}
+            duration={60}
+            onComplete={() => {
+              setShowNoti(false);
+              setSendMail(true);
+            }}
+            colors={["#004777", "#F7B801", "#A30000", "#A30000"]}
+            colorsTime={[60, 40, 20, 8]}
+          >
+            {({ remainingTime }) => remainingTime}
+          </CountdownCircleTimer>
+        </NotiContent>
+        <FlexboxGrid justify="end">
+          <ButtonToolbar>
+            <Button
+              appearance="primary"
+              color="red"
+              onClick={() => {
+                setShowNoti(false);
+                setSendMail(false);
+              }}
+            >
+              Abort
+            </Button>
+            <Button
+              appearance="primary"
+              color="cyan"
+              onClick={() => {
+                setShowNoti(false);
+                setSendMail(true);
+              }}
+            >
+              Send
+            </Button>
+          </ButtonToolbar>
+        </FlexboxGrid>
+      </Notification>
+    );
+  }
+);
 
 const ReportPageComponent = React.forwardRef((props, _ref) => {
   const [open, setOpen] = React.useState(false);
@@ -39,12 +92,15 @@ const ReportPageComponent = React.forwardRef((props, _ref) => {
   const [model, setModel] = useState();
   const [predictonModel, setPredictionModel] = useState();
   const [loading, setLoading] = useState(false);
+  const [showNoti, setShowNoti] = useState(false);
+  const [sendMail, setSendMail] = useState(false);
+
   const maxDecibelRef = useRef(0);
   const navigate = useNavigate();
 
   const toaster = useToaster();
 
-  let decibelsReadings = [];
+  let decibelsReadings = useMemo(() => [], []);
   let photos = [];
 
   const readImages = ref(database, "esp32-cam/");
@@ -52,6 +108,9 @@ const ReportPageComponent = React.forwardRef((props, _ref) => {
     const data = snapshot.val();
     photos = [...photos, data.photo];
   });
+
+  // const today = new Date().setHours(0, 0, 0, 0);
+  // const thatDay = new Date(data[key].timestamp).setHours(0, 0, 0, 0);
 
   const readSoundDecibels = ref(database, "Data/");
   onValue(readSoundDecibels, (snapshot) => {
@@ -61,12 +120,16 @@ const ReportPageComponent = React.forwardRef((props, _ref) => {
         ...decibelsReadings,
         {
           ...data[key],
-          timestamp: moment(data[key].timestamp).format("MMM Do YY"),
         },
       ];
     });
   });
-  maxDecibelRef.current = Math.max(...decibelsReadings.map((d) => d.Decibels));
+
+  maxDecibelRef.current = Math.max(
+    ...decibelsReadings
+      .slice(decibelsReadings.length - 50)
+      .map((d) => d.Decibels)
+  );
 
   const message = useMemo(() => {
     return (
@@ -85,9 +148,12 @@ const ReportPageComponent = React.forwardRef((props, _ref) => {
   }, []);
 
   useEffect(() => {
+    maxDecibelRef.current > 80 && setShowNoti(true);
+  }, [decibelsReadings]);
+
+  useEffect(() => {
     if (!model && !predictonModel)
       (async () => {
-        // Load the model.
         setLoading(true);
         const _predictionModel = await mobilenet.load();
         setPredictionModel(_predictionModel);
@@ -121,13 +187,12 @@ const ReportPageComponent = React.forwardRef((props, _ref) => {
       : "Inference";
 
   useEffect(() => {
-    // eslint-disable-next-line no-constant-condition
-    if (false) {
+    if (sendMail && auth.currentUser.email) {
       const data = {
         to_name: "Adams Eugene",
         message: "The Best",
         reply_to: "gracywiredu@gmail.com",
-        mail_to: "gracywiredu@gmail.com",
+        mail_to: auth.currentUser.email,
       };
       sendEmail(
         data,
@@ -135,7 +200,8 @@ const ReportPageComponent = React.forwardRef((props, _ref) => {
         () => toaster.push(errorMsg, { placement: "topEnd", duration: 5000 })
       );
     }
-  }, [errorMsg, message, toaster]);
+    setSendMail(false);
+  }, [errorMsg, message, sendMail, toaster]);
 
   return (
     <Panel
@@ -219,7 +285,16 @@ const ReportPageComponent = React.forwardRef((props, _ref) => {
               </RadioTile>
             </RadioTileGroup>
           </Selectors>
-          <img id="img" src={I} height={400} hidden crossOrigin="anonymous" />
+          <Pop>
+            <Animate
+              types="warning"
+              inn={showNoti}
+              setShowNoti={setShowNoti}
+              setSendMail={setSendMail}
+              children={MessagePop}
+            />
+          </Pop>
+          <img id="img" height={400} hidden crossOrigin="anonymous" />
         </Stack>
       )}
       <CustomModal
@@ -309,4 +384,19 @@ const Selectors = styled.div`
       border-color: #ccc;
     }
   }
+`;
+
+const Pop = styled.div`
+  position: absolute;
+  top: 5rem;
+  right: 2px;
+  z-index: 555;
+`;
+
+const NotiContent = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
 `;

@@ -11,55 +11,23 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { Loader } from "rsuite";
-
-// const data = [
-//   {
-//     name: "Page A",
-//     pv: 2400,
-//     amt: 2400,
-//   },
-//   {
-//     name: "Page B",
-//     pv: 1398,
-//     amt: 2210,
-//   },
-//   {
-//     name: "Page C",
-//     pv: 9800,
-//     amt: 2290,
-//   },
-//   {
-//     name: "Page D",
-//     pv: 3908,
-//     amt: 2000,
-//   },
-//   {
-//     name: "Page E",
-//     pv: 4800,
-//     amt: 2181,
-//   },
-//   {
-//     name: "Page F",
-//     pv: 3800,
-//     amt: 2500,
-//   },
-//   {
-//     name: "Page G",
-//     pv: 4300,
-//     amt: 2100,
-//   },
-// ];
+import moment from "moment";
 
 export default function CustomChart({ data }) {
   const [loading, setLoading] = useState(false);
-  //   const demoUrl =s 'https://codesandbox.io/s/simple-line-chart-kec3v';
-
+  const [dataToRender, setDataToRender] = useState([]);
   useEffect(() => {
     setLoading(true);
+    setDataToRender(
+      data?.map((d) => ({
+        ...d,
+        timestamp: moment(d.timestamp).format("MMM Do YY"),
+      }))
+    );
     setTimeout(() => {
       setLoading(false);
     }, 1000);
-  }, []);
+  }, [data]);
 
   return loading ? (
     <div style={{ height: "450px" }}>
@@ -75,7 +43,7 @@ export default function CustomChart({ data }) {
       <LineChart
         width={500}
         height={300}
-        data={data}
+        data={dataToRender}
         margin={{
           top: 5,
           right: 30,

@@ -62,6 +62,8 @@ export default function PDF({ data }) {
     remark: d.Decibels >= 80 ? "Faild" : d.Decibels <= 50 ? "Nice" : "Good",
   }));
 
+  console.log(data);
+
   return (
     <Document>
       <Page style={styles.body} size="A4">
@@ -95,7 +97,7 @@ export default function PDF({ data }) {
                 <Text style={styles.tableCell}>{row.id}</Text>
               </View>
               <View style={styles.tableCol}>
-                <Text style={styles.tableCell}>{row.date}</Text>
+                <Text style={styles.tableCell}>{row.timestamp}</Text>
               </View>
               <View style={styles.tableCol}>
                 <Text style={styles.tableCell}>{row.Decibels}</Text>
