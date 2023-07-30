@@ -22,6 +22,7 @@ import { signOut } from "firebase/auth";
 import Animate from "../components/Animate";
 import { useNavigate } from "react-router-dom";
 import { auth } from "../services/fireBase";
+import CustomCarrousel from "../components/CustomCarrousel";
 
 const renderIconButton = (props, ref) => {
   return (
@@ -80,6 +81,7 @@ const HomeComponent = React.forwardRef((props, ref) => {
   };
 
   return (
+    
     <Panel
       {...props}
       ref={ref}
@@ -113,7 +115,10 @@ const HomeComponent = React.forwardRef((props, ref) => {
         <FlexboxGrid.Item colspan={6}></FlexboxGrid.Item>
       </FlexboxGrid>
       <FlexboxGrid justify="center" align="middle"></FlexboxGrid>
+       <CustomCarrousel></CustomCarrousel>
     </Panel>
+    
+    
   );
 });
 

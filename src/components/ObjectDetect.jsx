@@ -11,6 +11,8 @@ export default function ObjectDetect({ model, img, predictonModel }) {
   const canvasRef = useRef(null);
   const imgRef = useRef(null);
 
+  
+
   useEffect(() => {
     (async () => {
       // Load the model.
@@ -40,10 +42,10 @@ export default function ObjectDetect({ model, img, predictonModel }) {
     }
   });
 
-  const PredictedObjects = predictions.map((pre) => `${pre.class} `);
+  const PredictedObjects = predictions.map((pre) => `${pre.className} `);
   const score = predictions.map((p) => +p.score.toFixed(2));
   const max = Math.max(...score);
-  console.log(max);
+  console.log('max score'+max);
 
   return (
     <Panel

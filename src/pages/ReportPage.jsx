@@ -107,6 +107,8 @@ const ReportPageComponent = React.forwardRef((props, _ref) => {
   onValue(readImages, (snapshot) => {
     const data = snapshot.val();
     photos = [...photos, data.photo];
+    console.log('my photos');
+    console.log(photos);
   });
 
   // const today = new Date().setHours(0, 0, 0, 0);
@@ -189,8 +191,8 @@ const ReportPageComponent = React.forwardRef((props, _ref) => {
   useEffect(() => {
     if (sendMail && auth.currentUser.email) {
       const data = {
-        to_name: "Adams Eugene",
-        message: "The Best",
+        to_name: "FirstName LastName",
+        message: "Protecting the environment",
         reply_to: "gracywiredu@gmail.com",
         mail_to: auth.currentUser.email,
       };
