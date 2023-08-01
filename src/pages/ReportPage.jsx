@@ -12,14 +12,16 @@ import {
   Stack,
   Loader,
   Button,
-  Notification,
-  ButtonToolbar,
+  Avatar,
+  Dropdown,
+  Modal,
 } from "rsuite";
 import { Icon } from "@rsuite/icons";
 import { BiMicrophone, BiSolidWebcam, BiSolidInfoCircle } from "react-icons/bi";
 import { Message, useToaster } from "rsuite";
 import { ref, onValue } from "firebase/database";
 import { CountdownCircleTimer } from "react-countdown-circle-timer";
+import RemindIcon from "@rsuite/icons/legacy/Remind";
 
 import Animate from "../components/Animate";
 import { styled } from "styled-components";
@@ -27,64 +29,22 @@ import CustomModal from "../components/CustomModal";
 import CustomChart from "../components/CustomChart";
 import ObjectDetect from "../components/ObjectDetect";
 // import bg from "../assets/s_l_bg.png";
-// import ppp from "../assets/ppp.jpg";
+import a from "../assets/a.jpg";
+import b from "../assets/b.jpg";
+import c from "../assets/c.webp";
+import d from "../assets/d.png";
+
+// import pp from "../assets/p.jpg";
+// import Ga1 from "../assets/galaImages/Gala1.jpg";
+// import Ga2 from "../assets/galaImages/Gala2.jpg";
+// import Ga3 from "../assets/galaImages/Gala3.jpg";
+// import Ga4 from "../assets/galaImages/Gala4.jpg";
+
 import { useNavigate } from "react-router-dom";
 import { sendEmail } from "../services/mailService";
 import CustomProgress from "../components/CustomProgress";
 import CustomProgressBig from "../components/CustomProgressBig";
 import { auth, database } from "../services/fireBase";
-
-// const I = ppp;
-
-const MessagePop = React.forwardRef(
-  ({ types, setShowNoti, setSendMail, ...rest }, ref) => {
-    return (
-      <Notification ref={ref} {...rest} type={types} header={types}>
-        <NotiContent>
-          Lorem ipsum dolor sit amet consectetur adipisicing elit. Magni illo
-          cupiditate repellat praesentium placeat ipsum dolorem ea doloribus?
-          <CountdownCircleTimer
-            isPlaying
-            size={100}
-            duration={60}
-            onComplete={() => {
-              setShowNoti(false);
-              setSendMail(true);
-            }}
-            colors={["#004777", "#F7B801", "#A30000", "#A30000"]}
-            colorsTime={[60, 40, 20, 8]}
-          >
-            {({ remainingTime }) => remainingTime}
-          </CountdownCircleTimer>
-        </NotiContent>
-        <FlexboxGrid justify="end">
-          <ButtonToolbar>
-            <Button
-              appearance="primary"
-              color="red"
-              onClick={() => {
-                setShowNoti(false);
-                setSendMail(false);
-              }}
-            >
-              Abort
-            </Button>
-            <Button
-              appearance="primary"
-              color="cyan"
-              onClick={() => {
-                setShowNoti(false);
-                setSendMail(true);
-              }}
-            >
-              Send
-            </Button>
-          </ButtonToolbar>
-        </FlexboxGrid>
-      </Notification>
-    );
-  }
-);
 
 const ReportPageComponent = React.forwardRef((props, _ref) => {
   const [open, setOpen] = React.useState(false);
@@ -94,6 +54,11 @@ const ReportPageComponent = React.forwardRef((props, _ref) => {
   const [loading, setLoading] = useState(false);
   const [showNoti, setShowNoti] = useState(false);
   const [sendMail, setSendMail] = useState(false);
+  const [dataToChart, setDataToChart] = useState([]);
+  const [isCa, setCa] = useState(true);
+  const [activeIndex, setActiveIndex] = useState();
+  const [loadingImg, setLoadingImg] = useState(false);
+  const [maxScore, setMaxScore] = useState(0);
 
   const maxDecibelRef = useRef(0);
   const navigate = useNavigate();
@@ -107,8 +72,8 @@ const ReportPageComponent = React.forwardRef((props, _ref) => {
   onValue(readImages, (snapshot) => {
     const data = snapshot.val();
     photos = [...photos, data.photo];
-    console.log('my photos');
-    console.log(photos);
+    // console.log("my photos");
+    // console.log(photos);
   });
 
   // const today = new Date().setHours(0, 0, 0, 0);
@@ -150,8 +115,8 @@ const ReportPageComponent = React.forwardRef((props, _ref) => {
   }, []);
 
   useEffect(() => {
-    maxDecibelRef.current > 80 && setShowNoti(true);
-  }, [decibelsReadings]);
+    (maxDecibelRef.current > 80 || maxScore > 80) && setShowNoti(true);
+  }, [decibelsReadings, maxScore]);
 
   useEffect(() => {
     if (!model && !predictonModel)
@@ -169,16 +134,40 @@ const ReportPageComponent = React.forwardRef((props, _ref) => {
     setValue(value);
   };
 
+  const onChangeDate = (from, to) => {
+    // console.log({ from, to });
+    setDataToChart(
+      decibelsReadings.filter((d) => d.timestamp >= from && d.timestamp <= to)
+    );
+  };
+
+  const dropdownSelect = (value) => {
+    setLoadingImg(true);
+    setValue("cam");
+    setActiveIndex(value);
+    setTimeout(() => {
+      setOpen(true);
+      setCa(false);
+      setLoadingImg(false);
+    }, 200);
+  };
+
   const _img = document.getElementById("img");
-  if (_img) _img.src = `data:image/png;base64,${photos[0]}`;
+  if (_img && !activeIndex)
+    _img.src = `data:image/png;base64,${photos[photos.length - 1]}`;
 
   const component =
     value === "cam" ? (
-      <ObjectDetect img={_img} model={model} predictonModel={predictonModel} />
+      <ObjectDetect
+        img={_img}
+        model={model}
+        predictonModel={predictonModel}
+        setMaxScore={setMaxScore}
+      />
     ) : value === "mic" ? (
-      <CustomChart data={decibelsReadings} />
+      <CustomChart data={dataToChart} />
     ) : (
-      <CustomProgressBig db={maxDecibelRef.current} />
+      <CustomProgressBig db={maxDecibelRef.current} score={maxScore} />
     );
 
   const title =
@@ -189,9 +178,9 @@ const ReportPageComponent = React.forwardRef((props, _ref) => {
       : "Inference";
 
   useEffect(() => {
-    if (sendMail && auth.currentUser.email) {
+    if (sendMail && auth.currentUser.email && auth.currentUser.displayName) {
       const data = {
-        to_name: "FirstName LastName",
+        to_name: auth.currentUser.displayName,
         message: "Protecting the environment",
         reply_to: "gracywiredu@gmail.com",
         mail_to: auth.currentUser.email,
@@ -241,17 +230,43 @@ const ReportPageComponent = React.forwardRef((props, _ref) => {
           />
         </div>
       ) : (
-        <Stack direction="column" alignItems="center" spacing={32}>
+        <Stack direction="column" alignItems="center" spacing={16}>
           <Panel>
             <h2>Click On Item To Display Info On It</h2>
           </Panel>
+          <ImageWrapper>
+            <Dropdown
+              title={"Load Image"}
+              onSelect={dropdownSelect}
+              loading={loadingImg}
+            >
+              <Dropdown.Item eventKey="a">
+                <Avatar src={a} alt="@SevenOutman" />
+              </Dropdown.Item>
+              <Dropdown.Item eventKey="b">
+                <Avatar src={b} alt="@SevenOutman" />
+              </Dropdown.Item>
+              <Dropdown.Item eventKey="c">
+                <Avatar src={c} alt="@SevenOutman" />
+              </Dropdown.Item>
+              <Dropdown.Item eventKey="d">
+                <Avatar src={d} alt="@SevenOutman" />
+              </Dropdown.Item>
+            </Dropdown>
+          </ImageWrapper>
           <Selectors>
             <RadioTileGroup
               onChange={handleRadioChange}
               inline
               aria-label="Create new project"
             >
-              <RadioTile onClick={() => setOpen(true)} value="mic">
+              <RadioTile
+                onClick={() => {
+                  setOpen(true);
+                  setCa(true);
+                }}
+                value="mic"
+              >
                 <ItemWrapper>
                   <Image>
                     <Icon as={BiMicrophone} size="10rem" />
@@ -262,7 +277,13 @@ const ReportPageComponent = React.forwardRef((props, _ref) => {
                   </TextCom>
                 </ItemWrapper>
               </RadioTile>
-              <RadioTile onClick={() => setOpen(true)} value="cam">
+              <RadioTile
+                onClick={() => {
+                  setOpen(true);
+                  setCa(false);
+                }}
+                value="cam"
+              >
                 <ItemWrapper2>
                   <Image>
                     <Icon as={BiSolidWebcam} size="10rem" />
@@ -275,36 +296,106 @@ const ReportPageComponent = React.forwardRef((props, _ref) => {
                   </TextCom2>
                 </ItemWrapper2>
               </RadioTile>
-              <RadioTile onClick={() => setOpen(true)} value="cir">
+              <RadioTile
+                onClick={() => {
+                  setOpen(true);
+                  setCa(false);
+                }}
+                value="cir"
+              >
                 <ItemWrapper>
                   <Image>
                     <Icon as={BiSolidInfoCircle} size="10rem" />
                   </Image>
                   <TextCom>
-                    <CustomProgress db={maxDecibelRef.current} />
+                    <CustomProgress
+                      db={maxDecibelRef.current}
+                      score={maxScore}
+                    />
                   </TextCom>
                 </ItemWrapper>
               </RadioTile>
             </RadioTileGroup>
           </Selectors>
-          <Pop>
-            <Animate
-              types="warning"
-              inn={showNoti}
-              setShowNoti={setShowNoti}
-              setSendMail={setSendMail}
-              children={MessagePop}
-            />
-          </Pop>
-          <img id="img" height={400} hidden crossOrigin="anonymous" />
+          <Modal
+            backdrop="static"
+            role="alertdialog"
+            open={showNoti}
+            onClose={() => {
+              setShowNoti(false);
+            }}
+            size="xs"
+          >
+            <Modal.Body>
+              <RemindIcon style={{ color: "#ffb300", fontSize: 24 }} />
+              sound {maxDecibelRef.current} image {maxScore}
+              <NotiContent>
+                <p>
+                  Please select cancel to prevent an alert being sent to your
+                  mail.
+                </p>
+                <CountdownCircleTimer
+                  isPlaying
+                  size={100}
+                  duration={60}
+                  onComplete={() => {
+                    setShowNoti(false);
+                    setSendMail(true);
+                    setMaxScore(0);
+                  }}
+                  colors={["#004777", "#F7B801", "#A30000", "#A30000"]}
+                  colorsTime={[60, 40, 20, 8]}
+                >
+                  {({ remainingTime }) => remainingTime}
+                </CountdownCircleTimer>
+              </NotiContent>
+            </Modal.Body>
+            <Modal.Footer>
+              <Button
+                onClick={() => {
+                  setShowNoti(false);
+                  setSendMail(true);
+                  setMaxScore(0);
+                }}
+                appearance="primary"
+              >
+                Ok
+              </Button>
+              <Button
+                onClick={() => {
+                  setShowNoti(false);
+                  setSendMail(false);
+                  setMaxScore(0);
+                }}
+                appearance="subtle"
+              >
+                Cancel
+              </Button>
+            </Modal.Footer>
+          </Modal>
+
+          {activeIndex === "a" ? (
+            <img id="img" height={400} src={a} hidden crossOrigin="anonymous" />
+          ) : activeIndex === "b" ? (
+            <img id="img" height={400} src={b} hidden crossOrigin="anonymous" />
+          ) : activeIndex === "c" ? (
+            <img id="img" height={400} src={c} hidden crossOrigin="anonymous" />
+          ) : activeIndex === "d" ? (
+            <img id="img" height={400} src={d} hidden crossOrigin="anonymous" />
+          ) : (
+            <img id="img" height={400} hidden crossOrigin="anonymous" />
+          )}
         </Stack>
       )}
       <CustomModal
         open={open}
+        setActiveIndex={setActiveIndex}
         setOpen={setOpen}
         size={"lg"}
         children={component}
         title={title}
+        onChangeDate={onChangeDate}
+        isCa={isCa}
       />
     </Panel>
   );
@@ -388,17 +479,17 @@ const Selectors = styled.div`
   }
 `;
 
-const Pop = styled.div`
-  position: absolute;
-  top: 5rem;
-  right: 2px;
-  z-index: 555;
-`;
-
 const NotiContent = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   margin-bottom: 8px;
+`;
+
+const ImageWrapper = styled.div`
+  position: absolute !important;
+  top: 115px;
+  right: 20px;
+  z-index: 999;
 `;

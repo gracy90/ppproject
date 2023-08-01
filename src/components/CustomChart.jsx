@@ -21,7 +21,7 @@ export default function CustomChart({ data }) {
     setDataToRender(
       data?.map((d) => ({
         ...d,
-        timestamp: moment(d.timestamp).format("MMM Do YY"),
+        timestamp: moment(d.timestamp).format("MMMM Do YYYY, h:mm:ss a"),
       }))
     );
     setTimeout(() => {

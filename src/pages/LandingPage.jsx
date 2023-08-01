@@ -81,7 +81,6 @@ const HomeComponent = React.forwardRef((props, ref) => {
   };
 
   return (
-    
     <Panel
       {...props}
       ref={ref}
@@ -107,7 +106,6 @@ const HomeComponent = React.forwardRef((props, ref) => {
           {/* </Stack> */}
         </FlexboxGrid.Item>
         <Dropdown renderToggle={renderIconButton} placement="bottomEnd">
-          <Dropdown.Item>Update</Dropdown.Item>
           <Dropdown.Item onClick={_signOut}>
             {auth.currentUser ? "Logout" : "Login"}
           </Dropdown.Item>
@@ -115,10 +113,8 @@ const HomeComponent = React.forwardRef((props, ref) => {
         <FlexboxGrid.Item colspan={6}></FlexboxGrid.Item>
       </FlexboxGrid>
       <FlexboxGrid justify="center" align="middle"></FlexboxGrid>
-       <CustomCarrousel></CustomCarrousel>
+      <CustomCarrousel></CustomCarrousel>
     </Panel>
-    
-    
   );
 });
 

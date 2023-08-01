@@ -3,20 +3,21 @@
 import { Progress } from "rsuite";
 import { styled } from "styled-components";
 
-export default function CustomProgressBig({ db }) {
+export default function CustomProgressBig({ db, score }) {
+  const max = Math.max(db, score);
   return (
     <CustomProgressBigWrapper>
       <Progress.Line
         vertical
-        percent={db}
-        status={db >= 80 ? "fail" : db < 50 ? "success" : "active"}
+        percent={+score?.toFixed(2)}
+        // status={score >= 80 ? "fail" : score < 50 ? "success" : "active"}
         strokeWidth={130}
       />
-      <Progress.Line vertical percent={50} status="fail" strokeWidth={130} />
+      <Progress.Line vertical percent={db} strokeWidth={130} />
       <Progress.Line
         vertical
-        percent={db}
-        status={db >= 80 ? "fail" : db < 50 ? "success" : "active"}
+        percent={max}
+        status={max >= 80 ? "fail" : max < 50 ? "success" : "active"}
         strokeWidth={130}
       />
       <Text1>Camera</Text1>

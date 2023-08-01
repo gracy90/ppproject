@@ -36,9 +36,9 @@ const ReportViewComponent = React.forwardRef((props, ref) => {
     setDataToRender(
       (dataToRenderNew || data)?.map((d, i) => ({
         ...d,
-        timestamp: moment(d.timestamp).format("MMM Do YY"),
+        timestamp: moment(d.timestamp).format("MMMM Do YYYY, h:mm:ss a"),
         id: i + 1,
-        remark: d.Decibels >= 80 ? "Faild" : d.Decibels <= 50 ? "Nice" : "Good",
+        remark: d.Decibels >= 80 ? "Loud" : d.Decibels <= "Low" ? "Low" : "Low",
       }))
     );
   }, [data, dataToRenderNew]);
