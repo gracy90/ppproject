@@ -58,7 +58,9 @@ const ReportPageComponent = React.forwardRef((props, _ref) => {
   const [isCa, setCa] = useState(true);
   const [activeIndex, setActiveIndex] = useState();
   const [loadingImg, setLoadingImg] = useState(false);
+  const [cancled, setCancled] = useState(true);
   const [maxScore, setMaxScore] = useState(0);
+  const [date, setDate] = useState();
 
   const maxDecibelRef = useRef(0);
   const navigate = useNavigate();
@@ -91,10 +93,10 @@ const ReportPageComponent = React.forwardRef((props, _ref) => {
       ];
     });
   });
-
+  // =========================================================================================================
   maxDecibelRef.current = Math.max(
     ...decibelsReadings
-      .slice(decibelsReadings.length - 50)
+      .filter((d) => d.timestamp >= date?.from && d.timestamp <= date?.to)
       .map((d) => d.Decibels)
   );
 
@@ -115,8 +117,12 @@ const ReportPageComponent = React.forwardRef((props, _ref) => {
   }, []);
 
   useEffect(() => {
-    (maxDecibelRef.current > 80 || maxScore > 80) && setShowNoti(true);
-  }, [decibelsReadings, maxScore]);
+    if ((maxDecibelRef.current > 80 || maxScore > 80) && cancled) {
+      setTimeout(() => {
+        setShowNoti(true);
+      }, 2000);
+    }
+  }, [cancled, decibelsReadings, maxScore]);
 
   useEffect(() => {
     if (!model && !predictonModel)
@@ -132,10 +138,17 @@ const ReportPageComponent = React.forwardRef((props, _ref) => {
 
   const handleRadioChange = (value) => {
     setValue(value);
+    if (value === "cam") {
+      maxDecibelRef.current = 0;
+      setMaxScore(0);
+      setCancled(true);
+    }
   };
 
   const onChangeDate = (from, to) => {
-    // console.log({ from, to });
+    setDate({ from, to });
+    maxDecibelRef.current = 0;
+    setCancled(true);
     setDataToChart(
       decibelsReadings.filter((d) => d.timestamp >= from && d.timestamp <= to)
     );
@@ -143,7 +156,10 @@ const ReportPageComponent = React.forwardRef((props, _ref) => {
 
   const dropdownSelect = (value) => {
     setLoadingImg(true);
+    maxDecibelRef.current = 0;
     setValue("cam");
+    setMaxScore(0);
+    setCancled(true);
     setActiveIndex(value);
     setTimeout(() => {
       setOpen(true);
@@ -341,7 +357,7 @@ const ReportPageComponent = React.forwardRef((props, _ref) => {
                   onComplete={() => {
                     setShowNoti(false);
                     setSendMail(true);
-                    setMaxScore(0);
+                    setCancled(false);
                   }}
                   colors={["#004777", "#F7B801", "#A30000", "#A30000"]}
                   colorsTime={[60, 40, 20, 8]}
@@ -355,7 +371,7 @@ const ReportPageComponent = React.forwardRef((props, _ref) => {
                 onClick={() => {
                   setShowNoti(false);
                   setSendMail(true);
-                  setMaxScore(0);
+                  setCancled(false);
                 }}
                 appearance="primary"
               >
@@ -365,7 +381,7 @@ const ReportPageComponent = React.forwardRef((props, _ref) => {
                 onClick={() => {
                   setShowNoti(false);
                   setSendMail(false);
-                  setMaxScore(0);
+                  setCancled(false);
                 }}
                 appearance="subtle"
               >
@@ -390,6 +406,7 @@ const ReportPageComponent = React.forwardRef((props, _ref) => {
       <CustomModal
         open={open}
         setActiveIndex={setActiveIndex}
+        setCancled={setCancled}
         setOpen={setOpen}
         size={"lg"}
         children={component}

@@ -11,6 +11,7 @@ export default function CustomModal({
   onChangeDate,
   isCa,
   setActiveIndex,
+  setCancled,
 }) {
   const handleDataChange = (value) => {
     const from = new Date(value[0]).valueOf();
@@ -26,6 +27,7 @@ export default function CustomModal({
         onClose={() => {
           setOpen(false);
           setActiveIndex(undefined);
+          setCancled(false);
         }}
       >
         <Modal.Header>

@@ -50,6 +50,10 @@ export default function ObjectDetect({
     }
   });
 
+  useEffect(() => {
+    setResults([]);
+  }, []);
+
   // const PredictedObjects = predictions.map((pre) => `${pre.class} `);
   const score = results.map((p) => +p.probability);
   const max = Math.max(...score);
@@ -71,6 +75,8 @@ export default function ObjectDetect({
           ...p,
           { name: pre.class, probability: pre.score * 100 },
         ]);
+      } else {
+        setResults((p) => [...p, { name: pre.class, probability: 0 }]);
       }
     });
   }, [predictions]);
@@ -84,12 +90,14 @@ export default function ObjectDetect({
             ...p,
             { name: item, probability: pre.probability * 100 },
           ]);
+        } else {
+          setResults((p) => [...p, { name: item, probability: 0 }]);
         }
       });
     });
   }, [otherPredictions]);
 
-  const res = [...new Set(results)];
+  const res = [...new Set(results.map((item) => item.name))]; // [ 'A', 'B']
 
   return (
     <Panel
@@ -100,7 +108,7 @@ export default function ObjectDetect({
           ) : (
             res.map((re) => (
               <TagGroup key={re}>
-                <Tag size="lg">{re.name}</Tag>
+                <Tag size="lg">{re}</Tag>
               </TagGroup>
             ))
           )}

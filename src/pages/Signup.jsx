@@ -43,7 +43,6 @@ const SignupComponent = React.forwardRef((props, ref) => {
       placement: "topEnd",
       duration: 5000,
     });
-
     if (auth.currentUser) {
       if (
         auth.currentUser.email === email &&

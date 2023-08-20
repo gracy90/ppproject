@@ -1,6 +1,6 @@
 import { pdf } from "@react-pdf/renderer";
 
-export const print = async (doc, fun) => {
+export const print = async (doc, fun, anotherFun) => {
   const blob = await pdf(doc).toBlob();
   const url = URL.createObjectURL(blob);
   // const link = document.createElement('a')
@@ -16,4 +16,5 @@ export const print = async (doc, fun) => {
     }, 1);
   };
   fun();
+  anotherFun();
 };

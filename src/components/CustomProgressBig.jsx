@@ -16,7 +16,7 @@ export default function CustomProgressBig({ db, score }) {
       <Progress.Line vertical percent={db} strokeWidth={130} />
       <Progress.Line
         vertical
-        percent={max}
+        percent={+max?.toFixed(2)}
         status={max >= 80 ? "fail" : max < 50 ? "success" : "active"}
         strokeWidth={130}
       />

@@ -21,6 +21,7 @@ const ReportViewComponent = React.forwardRef((props, ref) => {
   const [data, setData] = React.useState([]);
   const [dataToRender, setDataToRender] = React.useState([]);
   const [dataToRenderNew, setDataToRenderNew] = React.useState([]);
+  const [loading, setLoading] = React.useState(false);
 
   const message = (
     <Message showIcon type={"success"} closable>
@@ -44,8 +45,11 @@ const ReportViewComponent = React.forwardRef((props, ref) => {
   }, [data, dataToRenderNew]);
 
   const onPrint = () => {
-    print(<PDF data={dataToRender} />, () =>
-      toaster.push(message, { placement: "topEnd", duration: 5000 })
+    setLoading(true);
+    print(
+      <PDF data={dataToRender} />,
+      () => toaster.push(message, { placement: "topEnd", duration: 5000 }),
+      () => setLoading(false)
     );
   };
 
@@ -76,6 +80,7 @@ const ReportViewComponent = React.forwardRef((props, ref) => {
               appearance="primary"
               startIcon={<Icon as={AiOutlineFilePdf} size="1rem" />}
               onClick={onPrint}
+              loading={loading}
             >
               Export
             </Button>
