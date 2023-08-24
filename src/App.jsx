@@ -9,6 +9,7 @@ function App() {
   const [user, setUser] = useState("adams");
 
   useEffect(() => {
+    console.log("'Running")
     onAuthStateChanged(auth, (user) => {
       if (user) {
         setUser(user);

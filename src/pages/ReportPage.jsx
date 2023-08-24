@@ -62,21 +62,22 @@ const ReportPageComponent = React.forwardRef((props, _ref) => {
   const [maxScore, setMaxScore] = useState(0);
   const [date, setDate] = useState();
 
+  const [photo, setPhoto] = useState("");
+
   const maxDecibelRef = useRef(0);
   const navigate = useNavigate();
 
   const toaster = useToaster();
 
   let decibelsReadings = useMemo(() => [], []);
-  let photos = [];
 
-  const readImages = ref(database, "esp32-cam/");
-  onValue(readImages, (snapshot) => {
-    const data = snapshot.val();
-    photos = [...photos, data.photo];
-    // console.log("my photos");
-    // console.log(photos);
-  });
+  useEffect(() => {
+    const readImages = ref(database, "esp32-cam/");
+    onValue(readImages, (snapshot) => {
+      const data = snapshot.val();
+      setPhoto(data.photo);
+    });
+  },[]);
 
   // const today = new Date().setHours(0, 0, 0, 0);
   // const thatDay = new Date(data[key].timestamp).setHours(0, 0, 0, 0);
@@ -169,8 +170,7 @@ const ReportPageComponent = React.forwardRef((props, _ref) => {
   };
 
   const _img = document.getElementById("img");
-  if (_img && !activeIndex)
-    _img.src = `data:image/png;base64,${photos[photos.length - 1]}`;
+  if (_img && !activeIndex) _img.src = `data:image/png;base64,${photo}`;
 
   const component =
     value === "cam" ? (
